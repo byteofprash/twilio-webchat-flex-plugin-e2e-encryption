@@ -1,0 +1,27 @@
+{
+  "name": "plugin-webchat-e2e-encryption",
+  "version": "0.0.1",
+  "private": true,
+  "scripts": {
+    "start": "twilio flex:plugins:start",
+    "deploy": "twilio flex:plugins:build && twilio flex:plugins:deploy",
+    "postinstall": "flex-plugin pre-script-check"
+  },
+  "dependencies": {
+    "@twilio-paste/core": "^10.14.0",
+    "@twilio-paste/icons": "^5.7.0",
+    "@twilio/flex-plugin-scripts": "5.1.2",
+    "mime-types": "^2.1.35",
+    "prop-types": "^15.7.2",
+    "react": "17.0.2",
+    "react-dom": "17.0.2",
+    "tweetnacl": "^1.0.3",
+    "tweetnacl-util": "^0.15.1"
+  },
+  "devDependencies": {
+    "@types/mime-types": "^2.1.1",
+    "@twilio/flex-ui": "2.0.0-beta.1",
+    "react-test-renderer": "17.0.2",
+    "typescript": "^4"
+  }
+}
