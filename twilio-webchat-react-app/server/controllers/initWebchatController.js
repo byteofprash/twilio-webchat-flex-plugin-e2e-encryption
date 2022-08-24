@@ -6,6 +6,7 @@ const { logFinalAction, logInitialAction, logInterimAction } = require("../helpe
 
 const contactWebchatOrchestrator = async (request, customerFriendlyName) => {
     logInterimAction("Calling Webchat Orchestrator");
+    const { customerPublicKey, formData } = request.body;
 
     const params = new URLSearchParams();
     params.append("AddressSid", process.env.ADDRESS_SID);
@@ -14,7 +15,7 @@ const contactWebchatOrchestrator = async (request, customerFriendlyName) => {
     params.append(
         "PreEngagementData",
         JSON.stringify({
-            ...request.body?.formData,
+            ...formData,
             friendlyName: customerFriendlyName
         })
     );
@@ -30,6 +31,8 @@ const contactWebchatOrchestrator = async (request, customerFriendlyName) => {
             }
         });
         ({ identity, conversation_sid: conversationSid } = res.data);
+
+        await setPublicKey(conversationSid, customerPublicKey);
     } catch (e) {
         logInterimAction("Something went wrong during the orchestration:", e.response?.data?.message);
         throw e.response.data;
@@ -41,6 +44,16 @@ const contactWebchatOrchestrator = async (request, customerFriendlyName) => {
         conversationSid,
         identity
     };
+};
+
+const setPublicKey = async (conversationSid, customerPublicKey) => {
+    // console.log("conversationSid", conversationSid);
+    const { attributes } = await getTwilioClient().conversations.conversations(conversationSid).fetch();
+    await getTwilioClient()
+        .conversations.conversations(conversationSid)
+        .update({
+            attributes: JSON.stringify({ ...JSON.parse(attributes), customerPublicKey })
+        });
 };
 
 const sendUserMessage = (conversationSid, identity, messageBody) => {
@@ -60,21 +73,21 @@ const sendUserMessage = (conversationSid, identity, messageBody) => {
         });
 };
 
-const sendWelcomeMessage = (conversationSid, customerFriendlyName) => {
-    logInterimAction("Sending welcome message");
-    return getTwilioClient()
-        .conversations.conversations(conversationSid)
-        .messages.create({
-            body: `Welcome ${customerFriendlyName}! An agent will be with you in just a moment.`,
-            author: "Concierge"
-        })
-        .then(() => {
-            logInterimAction("(async) Welcome message sent");
-        })
-        .catch((e) => {
-            logInterimAction(`(async) Couldn't send welcome message: ${e?.message}`);
-        });
-};
+// const sendWelcomeMessage = (conversationSid, customerFriendlyName) => {
+//     logInterimAction("Sending welcome message");
+//     return getTwilioClient()
+//         .conversations.conversations(conversationSid)
+//         .messages.create({
+//             body: `Welcome ${customerFriendlyName}! An agent will be with you in just a moment.`,
+//             author: "Concierge"
+//         })
+//         .then(() => {
+//             logInterimAction("(async) Welcome message sent");
+//         })
+//         .catch((e) => {
+//             logInterimAction(`(async) Couldn't send welcome message: ${e?.message}`);
+//         });
+// };
 
 const initWebchatController = async (request, response) => {
     logInitialAction("Initiating webchat");
@@ -98,13 +111,14 @@ const initWebchatController = async (request, response) => {
     // OPTIONAL — if user query is defined
     if (request.body?.formData?.query) {
         // use it to send a message in behalf of the user with the query as body
-        sendUserMessage(conversationSid, identity, request.body.formData.query).then(() =>
-            // and then send another message from Concierge, letting the user know that an agent will help them soon
-            sendWelcomeMessage(conversationSid, customerFriendlyName)
-        );
+        await sendUserMessage(conversationSid, identity, request.body.formData.query); //.then(() =>
+        // and then send another message from Concierge, letting the user know that an agent will help them soon
+        // sendWelcomeMessage(conversationSid, customerFriendlyName)
+        // );
     }
 
     response.send({
+        identity,
         token,
         conversationSid,
         expiration: Date.now() + TOKEN_TTL_IN_SECONDS * 1000
