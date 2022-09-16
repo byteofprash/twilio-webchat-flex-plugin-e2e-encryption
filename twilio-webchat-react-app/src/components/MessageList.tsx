@@ -156,7 +156,6 @@ export const MessageList = () => {
         if (isFirstUnreadMessage && !belongsToCurrentUser) {
             return <MessageListSeparator message={message} separatorType="new" />;
         }
-
         return null;
     };
 

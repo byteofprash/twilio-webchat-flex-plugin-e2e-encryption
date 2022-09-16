@@ -15,6 +15,7 @@ import { Header } from "./Header";
 import { notifications } from "../notifications";
 import { NotificationBar } from "./NotificationBar";
 import { introStyles, fieldStyles, titleStyles, formStyles } from "./styles/PreEngagementFormPhase.styles";
+import { ACTION_ADD_AGENT_PUBLIC_KEY } from "../store/actions/actionTypes";
 
 export const PreEngagementFormPhase = () => {
     const { name, email, query } = useSelector((state: AppState) => state.session.preEngagementData) || {};
@@ -22,6 +23,7 @@ export const PreEngagementFormPhase = () => {
 
     const handleSubmit = async (e: FormEvent) => {
         e.preventDefault();
+        dispatch({ type: ACTION_ADD_AGENT_PUBLIC_KEY, payload: undefined });
         dispatch(changeEngagementPhase({ phase: EngagementPhase.Loading }));
         try {
             const data = await sessionDataHandler.fetchAndStoreNewSession({
