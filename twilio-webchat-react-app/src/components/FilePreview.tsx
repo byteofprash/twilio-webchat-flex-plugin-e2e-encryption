@@ -1,4 +1,5 @@
 import log from "loglevel";
+import axios from "axios";
 import { useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { Box } from "@twilio-paste/core/box";
@@ -12,6 +13,8 @@ import { Truncate } from "@twilio-paste/core/truncate";
 
 import { addNotification, detachFiles } from "../store/actions/genericActions";
 import { AppState } from "../store/definitions";
+import { download } from "../helpers/encryptFiles";
+import { encrypt } from "../helpers/naclForWebsite";
 import { notifications } from "../notifications";
 import { roundFileSizeInMB } from "../utils/roundFileSizeInMB";
 import {
@@ -38,7 +41,6 @@ export const FilePreview = (props: FilePreviewProps) => {
 
     const dispatch = useDispatch();
     const fileAttachmentConfig = useSelector((state: AppState) => state.config.fileAttachment);
-
     const handleDetach = () => {
         dispatch(detachFiles([file]));
     };
@@ -72,7 +74,13 @@ export const FilePreview = (props: FilePreviewProps) => {
 
         try {
             const url = media ? await media.getContentTemporaryUrl() : URL.createObjectURL(file);
-            window.open(url);
+            if (media) {
+                /*  When the media exists, you decrypt and download the file */
+                axios.get(url).then((resp) => {
+                    const { body } = encrypt.decrypt(resp.data);
+                    download(body, media.filename);
+                });
+            }
         } catch (e) {
             log.error(`Failed downloading message attachment: ${e}`);
         }

@@ -1,4 +1,4 @@
-import { Client } from "@twilio/conversations";
+import { Client, Message } from "@twilio/conversations";
 import { Dispatch } from "redux";
 import log from "loglevel";
 
@@ -11,6 +11,7 @@ import { notifications } from "../../notifications";
 import { ACTION_START_SESSION, ACTION_LOAD_CONFIG } from "./actionTypes";
 import { addNotification, changeEngagementPhase } from "./genericActions";
 import { MESSAGES_LOAD_COUNT } from "../../constants";
+import { encrypt } from "../../helpers/naclForWebsite";
 
 export function initConfig(config: ConfigState) {
     return {
@@ -25,7 +26,7 @@ export function initSession({ token, conversationSid }: { token: string; convers
         let conversation;
         let participants;
         let users;
-        let messages;
+        let messages: Message[];
 
         try {
             conversationsClient = await Client.create(token);
@@ -40,6 +41,11 @@ export function initSession({ token, conversationSid }: { token: string; convers
             participants = await conversation.getParticipants();
             users = await Promise.all(participants.map(async (p) => p.getUser()));
             messages = (await conversation.getMessages(MESSAGES_LOAD_COUNT)).items;
+
+            messages.map((message, index) => {
+                const { body } = encrypt.decrypt(message.body);
+                (messages as any)[index].bodyDecrypted = body;
+            });
         } catch (e) {
             log.error("Something went wrong when initializing session", e);
             throw e;

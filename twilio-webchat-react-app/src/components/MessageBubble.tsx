@@ -1,4 +1,4 @@
-import { Media, Message } from "@twilio/conversations";
+import { Media } from "@twilio/conversations";
 import { Box } from "@twilio-paste/core/box";
 import { ScreenReaderOnly } from "@twilio-paste/core";
 import { useSelector } from "react-redux";
@@ -21,6 +21,7 @@ import {
     readStatusStyles,
     bubbleAndAvatarContainerStyles
 } from "./styles/MessageBubble.styles";
+import { MessageDecrypted } from "../store/actions/listeners/messagesListener";
 
 const doubleDigit = (number: number) => `${number < 10 ? 0 : ""}${number}`;
 
@@ -31,7 +32,7 @@ export const MessageBubble = ({
     focusable,
     updateFocus
 }: {
-    message: Message;
+    message: MessageDecrypted;
     isLast: boolean;
     isLastOfUserGroup: boolean;
     focusable: boolean;
@@ -111,6 +112,8 @@ export const MessageBubble = ({
 
     const author = users?.find((u) => u.identity === message.author)?.friendlyName || message.author;
 
+    // If the bodyDecrypted exists
+    const body = message.bodyDecrypted;
     return (
         <Box
             {...outerContainerStyles}
@@ -146,8 +149,9 @@ export const MessageBubble = ({
                         </Text>
                     </Flex>
                     <Text as="p" {...bodyStyles}>
-                        {message.body ? parseMessageBody(message.body, belongsToCurrentUser) : null}
+                        {body ? parseMessageBody(body, belongsToCurrentUser) : null}
                     </Text>
+
                     {message.type === "media" ? renderMedia() : null}
                 </Box>
             </Box>

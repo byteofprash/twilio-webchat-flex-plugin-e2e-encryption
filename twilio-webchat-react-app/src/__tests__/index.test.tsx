@@ -20,7 +20,7 @@ describe("Index", () => {
             const renderSpy = jest.spyOn(reactDom, "render");
 
             const root = document.createElement("div");
-            root.id = "twilio-webchat-widget-root";
+            root.id = "root";
             document.body.appendChild(root);
             initWebchat({});
 

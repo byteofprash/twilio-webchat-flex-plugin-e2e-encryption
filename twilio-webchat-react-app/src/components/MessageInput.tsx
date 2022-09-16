@@ -13,6 +13,7 @@ import { AttachFileButton } from "./AttachFileButton";
 import { FilePreview } from "./FilePreview";
 import { detachFiles } from "../store/actions/genericActions";
 import { CHAR_LIMIT } from "../constants";
+
 import {
     formStyles,
     innerInputStyles,
@@ -20,6 +21,8 @@ import {
     filePreviewContainerStyles,
     textAreaContainerStyles
 } from "./styles/MessageInput.styles";
+import { encrypt } from "../helpers/naclForWebsite";
+import { encryptFiles } from "../helpers/encryptFiles";
 
 export const MessageInput = () => {
     const dispatch = useDispatch();
@@ -60,12 +63,10 @@ export const MessageInput = () => {
         setIsSending(true);
 
         let preparedMessage = conversation.prepareMessage();
-        preparedMessage = preparedMessage.setBody(text);
-        attachedFiles.forEach((file: File) => {
-            const formData = new FormData();
-            formData.append(file.name, file);
-            preparedMessage.addMedia(formData);
-        });
+        const encryptedText = encrypt.encrypt(text);
+        preparedMessage = preparedMessage.setBody(encryptedText);
+        preparedMessage.setAttributes({ isEncrypted: true });
+        await encryptFiles(attachedFiles, preparedMessage);
         await preparedMessage.build().send();
         setText("");
         dispatch(detachFiles(attachedFiles));

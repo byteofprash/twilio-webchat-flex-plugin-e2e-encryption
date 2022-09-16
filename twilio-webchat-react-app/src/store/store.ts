@@ -3,6 +3,7 @@ import thunk from "redux-thunk";
 
 import { ChatReducer } from "./chat.reducer";
 import { ConfigReducer } from "./config.reducer";
+import { e2eEncryptionReducer } from "./e2eEncryption.reducer";
 import { NotificationReducer } from "./notification.reducer";
 import { SessionReducer } from "./session.reducer";
 
@@ -14,7 +15,8 @@ const reducers = combineReducers({
     chat: ChatReducer,
     config: ConfigReducer,
     notifications: NotificationReducer,
-    session: SessionReducer
+    session: SessionReducer,
+    e2eEncryption: e2eEncryptionReducer
 });
 
 export const store = createStore(reducers, composeEnhancers(applyMiddleware(thunk)));
