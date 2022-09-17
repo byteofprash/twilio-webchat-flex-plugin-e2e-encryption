@@ -32,11 +32,31 @@ export default class PluginWebchatEncryption extends FlexPlugin {
     });
 
     flex.Actions.addListener('beforeSendMessage', async (payload) => {
+      // console.log('@@@ beforeSendMessage payload: ', payload);
+      const { conversationSid } = payload;
+
+      if (!conversationSid) {
+        console.log('@@@ Not a chat, aborting...');
+        return;
+      }
+
+      const {
+        conversation: {
+          source: {
+            attributes: { customerPublicKey },
+          },
+        },
+      } = payload;
+
+      if (!customerPublicKey) {
+        console.log('@@@ Not an E2E encrypted chat, aborting...');
+        return;
+      }
+
       // ohh, we cant set the message.attribute from this beforeSendMessage listener...
       // the only way to identify whether it is an encrypted message is adding this constant "@@@isEncrypted@@@" at the beginninng.
       // not elegant, but it is the only way.
       payload.body = '@@@isEncrypted@@@' + encrypt.encrypt(payload.conversationSid, payload.body);
-      // console.log('@@@ beforeSendMessage ', payload);
     });
 
     flex.Actions.addListener('beforeAttachFile', async (payload, original) => {
